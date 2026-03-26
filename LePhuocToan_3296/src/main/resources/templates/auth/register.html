@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng ký - JBook Store')}"></head>
+<body class="bg-light">
+
+<style>
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+    
+    .register-card {
+        max-width: 600px;
+        width: 100%;
+    }
+</style>
+
+<div class="register-container">
+    <div class="register-card">
+        
+        <!-- Logo & Title -->
+        <div class="text-center mb-4">
+            <a th:href="@{/}" class="text-decoration-none">
+                <h1 class="text-primary mb-2">
+                    <i class="fas fa-book-open"></i> JBook Store
+                </h1>
+            </a>
+            <p class="text-muted">Tạo tài khoản mới</p>
+        </div>
+        
+        <!-- Register Card -->
+        <div class="card border-0 shadow-lg">
+            <div class="card-body p-4">
+                
+                <!-- Alert Messages -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${message}" class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle"></i> 
+                    <span th:text="${message}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- Register Form -->
+                <form th:action="@{/register}" th:object="${user}" method="post" id="registerForm">
+                    
+                    <div class="row g-3">
+                        
+                        <!-- Full Name -->
+                        <div class="col-md-6">
+                            <label for="fullname" class="form-label">
+                                <i class="fas fa-user"></i> Họ và tên <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="fullname" 
+                                   th:field="*{fullname}"
+                                   placeholder="Nguyễn Văn A"
+                                   required>
+                        </div>
+                        
+                        <!-- Phone -->
+                        <div class="col-md-6">
+                            <label for="phoneNumber" class="form-label">
+                                <i class="fas fa-phone"></i> Số điện thoại <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phoneNumber" 
+                                   th:field="*{phoneNumber}"
+                                   placeholder="0901234567"
+                                   pattern="[0-9]{10,11}"
+                                   required>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="col-12">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   th:field="*{email}"
+                                   placeholder="email@example.com"
+                                   required>
+                        </div>
+                        
+                        <!-- Username -->
+                        <div class="col-12">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user-circle"></i> Tên đăng nhập <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   th:field="*{username}"
+                                   placeholder="username"
+                                   pattern="[a-zA-Z0-9_]{4,20}"
+                                   required>
+                            <small class="text-muted">4-20 ký tự, chỉ bao gồm chữ, số và dấu gạch dưới</small>
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i> Mật khẩu <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       th:field="*{password}"
+                                       placeholder="••••••••"
+                                       minlength="6"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        onclick="togglePassword('password', 'toggleIcon1')">
+                                    <i class="fas fa-eye" id="toggleIcon1"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Tối thiểu 6 ký tự</small>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i> Xác nhận mật khẩu <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirmPassword" 
+                                       name="confirmPassword"
+                                       placeholder="••••••••"
+                                       minlength="6"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        onclick="togglePassword('confirmPassword', 'toggleIcon2')">
+                                    <i class="fas fa-eye" id="toggleIcon2"></i>
+                                </button>
+                            </div>
+                            <div id="passwordMatchError" class="invalid-feedback d-none">
+                                Mật khẩu không khớp!
+                            </div>
+                        </div>
+                        
+                        <!-- Address removed - not a direct property of User entity -->
+                        
+                        <!-- Terms & Conditions -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="agreeTerms" 
+                                       required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    Tôi đồng ý với 
+                                    <a href="#" class="text-decoration-none">Điều khoản sử dụng</a> 
+                                    và 
+                                    <a href="#" class="text-decoration-none">Chính sách bảo mật</a>
+                                    <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="col-12">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus"></i> Đăng ký
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                </form>
+                
+                <!-- Login Link -->
+                <div class="text-center mt-3">
+                    <p class="mb-0">
+                        Đã có tài khoản? 
+                        <a th:href="@{/login}" class="text-decoration-none fw-bold">
+                            Đăng nhập ngay
+                        </a>
+                    </p>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center mt-3">
+            <a th:href="@{/}" class="text-decoration-none">
+                <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+            </a>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script>
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+    
+    // Validate password match
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorDiv = document.getElementById('passwordMatchError');
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            errorDiv.classList.remove('d-none');
+            errorDiv.style.display = 'block';
+            document.getElementById('confirmPassword').classList.add('is-invalid');
+            return false;
+        } else {
+            errorDiv.classList.add('d-none');
+            document.getElementById('confirmPassword').classList.remove('is-invalid');
+        }
+        
+        return true;
+    });
+    
+    // Real-time password match check
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+        const errorDiv = document.getElementById('passwordMatchError');
+        
+        if (confirmPassword && password !== confirmPassword) {
+            errorDiv.classList.remove('d-none');
+            errorDiv.style.display = 'block';
+            this.classList.add('is-invalid');
+        } else {
+            errorDiv.classList.add('d-none');
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Phone number validation
+    document.getElementById('phoneNumber').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+
+</body>
+</html>

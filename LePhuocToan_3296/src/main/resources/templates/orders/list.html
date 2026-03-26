@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Đơn hàng của tôi - JBook Store')}"></head>
+<body>
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="container">
+        
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Đơn hàng của tôi</li>
+            </ol>
+        </nav>
+        
+        <h2 class="mb-4"><i class="fas fa-box"></i> Đơn hàng của tôi</h2>
+        
+        <!-- Alert Messages -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Orders List -->
+        <div th:if="${orders != null and !orders.isEmpty()}">
+            
+            <div class="card border-0 shadow-sm mb-4" th:each="order : ${orders}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="fas fa-receipt"></i> 
+                            Đơn hàng #<span th:text="${order.id}">12345</span>
+                        </h5>
+                        <small class="text-muted">
+                            <i class="far fa-calendar"></i>
+                            Ngày đặt: <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:30</span>
+                        </small>
+                    </div>
+                    <div>
+                        <span class="badge fs-6"
+                              th:classappend="${order.status == 'PENDING' ? 'bg-warning text-dark' : 
+                                              order.status == 'CONFIRMED' ? 'bg-info' :
+                                              order.status == 'SHIPPING' ? 'bg-primary' :
+                                              order.status == 'COMPLETED' ? 'bg-success' :
+                                              order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                              th:text="${order.status == 'PENDING' ? 'Chờ xác nhận' : 
+                                       order.status == 'CONFIRMED' ? 'Đã xác nhận' :
+                                       order.status == 'SHIPPING' ? 'Đang giao hàng' :
+                                       order.status == 'COMPLETED' ? 'Đã giao hàng' :
+                                       order.status == 'CANCELLED' ? 'Đã hủy' : order.status}">
+                            Pending
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="mb-3"><i class="fas fa-book"></i> Sản phẩm:</h6>
+                            <div class="d-flex align-items-center mb-2" th:each="detail, iterStat : ${order.orderDetails}" th:if="${iterStat.index < 3}">
+                                <span class="badge bg-secondary me-2" th:text="${detail.quantity}">2</span>
+                                <span th:text="${detail.book.title}">Tên sách</span>
+                            </div>
+                            <small class="text-muted" th:if="${order.orderDetails.size() > 3}">
+                                ... và <span th:text="${order.orderDetails.size() - 3}">2</span> sản phẩm khác
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <p class="mb-2">
+                                <strong>Tổng tiền:</strong><br>
+                                <span class="text-danger fs-5" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                                    450,000₫
+                                </span>
+                            </p>
+                            <div class="btn-group" role="group">
+                                <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger"
+                                        th:if="${order.status == 'PENDING' or order.status == 'CONFIRMED'}"
+                                        onclick="confirmCancel(this)"
+                                        th:attr="data-order-id=${order.id}">
+                                    <i class="fas fa-times-circle"></i> Hủy đơn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Empty State -->
+        <div th:if="${orders == null or orders.isEmpty()}" class="text-center py-5">
+            <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+            <h4 class="text-muted">Bạn chưa có đơn hàng nào</h4>
+            <p class="text-muted mb-4">Hãy khám phá các sản phẩm và đặt hàng ngay!</p>
+            <a th:href="@{/books}" class="btn btn-primary">
+                <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+            </a>
+        </div>
+        
+    </div>
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<!-- Hidden form for cancel order -->
+<form id="cancelOrderForm" method="post" style="display: none;">
+</form>
+
+<script>
+    function confirmCancel(button) {
+        const orderId = button.getAttribute('data-order-id');
+        
+        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+            const form = document.getElementById('cancelOrderForm');
+            form.action = `/orders/${orderId}/cancel`;
+            form.submit();
+        }
+    }
+</script>
+
+</body>
+</html>

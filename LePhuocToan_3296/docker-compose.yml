@@ -1,0 +1,23 @@
+services:
+  app-java: # Tên dịch vụ tự đặt
+    build: . # Tìm Dockerfile ở thư mục hiện tại để build
+    ports:
+      - "8080:8080" # Mở cổng cho sinh viên truy cập localhost:8080
+    depends_on:
+      - db-mysql # Chờ DB sẵn sàng rồi mới chạy App
+    environment:
+      # Các biến chuẩn Spring Boot để tạo DataSource
+      SPRING_DATASOURCE_URL: jdbc:mysql://db-mysql:3306/demo_docker_db?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  db-mysql:
+    image: mysql:8.0 # Tải thẳng image từ Docker Hub
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: demo_docker_db
+    volumes:
+      - db_data:/var/lib/mysql # Dữ liệu DB không bị mất khi xóa container
+
+volumes:
+  db_data: # Khai báo volume dùng chung

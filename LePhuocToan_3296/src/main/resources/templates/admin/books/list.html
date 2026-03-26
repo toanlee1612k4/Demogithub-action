@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Quan ly Sach - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('books')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Quan ly Sach')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Sach</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 style="font-weight:600;color:var(--text-primary);margin:0;"><i class="fas fa-book me-2"></i>Danh sach sach</h5>
+            <a th:href="@{/admin/books/create}" class="btn btn-primary btn-sm" style="font-size:0.8rem;">
+                <i class="fas fa-plus me-1"></i> Them sach
+            </a>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Table -->
+        <div class="glass-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Hinh</th>
+                                <th>Tieu de</th>
+                                <th>Tac gia</th>
+                                <th>Danh muc</th>
+                                <th>Gia</th>
+                                <th>Ton kho</th>
+                                <th>Trang thai</th>
+                                <th class="text-end">Thao tac</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="book : ${bookPage.content}">
+                                <td th:text="${book.id}">1</td>
+                                <td>
+                                    <img th:src="${book.image != null and !book.image.isEmpty() ? book.image : 'https://via.placeholder.com/36x48/1e293b/64748b?text=No'}"
+                                         style="width:36px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--glass-border);">
+                                </td>
+                                <td>
+                                    <div style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" th:text="${book.title}">Title</div>
+                                </td>
+                                <td style="color:var(--text-secondary);" th:text="${book.author}">Author</td>
+                                <td>
+                                    <span class="badge badge-glass bg-info" th:if="${book.category != null}" th:text="${book.category.name}">Cat</span>
+                                </td>
+                                <td>
+                                    <strong style="color:#ef4444;" th:text="${#numbers.formatDecimal(book.price, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</strong>
+                                </td>
+                                <td>
+                                    <span class="badge badge-glass"
+                                          th:classappend="${book.quantity != null and book.quantity > 10 ? 'bg-success' : book.quantity != null and book.quantity > 0 ? 'bg-warning text-dark' : 'bg-danger'}"
+                                          th:text="${book.quantity != null ? book.quantity : 0}">0</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-glass"
+                                          th:classappend="${book.isDeleted != true ? 'bg-success' : 'bg-danger'}"
+                                          th:text="${book.isDeleted != true ? 'Active' : 'Deleted'}">Active</span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/admin/books/edit/{id}(id=${book.id})}" class="btn-glass" style="font-size:0.7rem;padding:0.25rem 0.5rem;text-decoration:none;">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form th:action="@{/admin/books/delete/{id}(id=${book.id})}" method="post" class="d-inline" onsubmit="return confirm('Xoa sach nay?');">
+                                        <button type="submit" class="btn-glass" style="font-size:0.7rem;padding:0.25rem 0.5rem;color:#ef4444;border-color:rgba(239,68,68,0.3);cursor:pointer;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${bookPage.totalPages > 1}" class="mt-3">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item" th:classappend="${bookPage.first ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/books(page=${bookPage.number - 1})}"><i class="fas fa-chevron-left"></i></a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, bookPage.totalPages - 1)}" th:classappend="${i == bookPage.number ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/admin/books(page=${i})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${bookPage.last ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/books(page=${bookPage.number + 1})}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>

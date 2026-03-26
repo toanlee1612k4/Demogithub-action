@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Quan ly nguoi dung - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('users')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Quan ly nguoi dung')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Nguoi dung</li>
+            </ol>
+        </nav>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="glass-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                    <i class="fas fa-users me-2" style="color:var(--accent);"></i>Danh sach nguoi dung
+                    <span class="badge badge-glass bg-primary ms-2" th:text="${userPage.totalElements}">0</span>
+                </h6>
+                <a th:href="@{/admin/users/add}" class="btn btn-primary btn-sm" style="font-size:0.78rem;">
+                    <i class="fas fa-plus me-1"></i> Them nguoi dung
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ho ten</th>
+                                <th>Ten dang nhap</th>
+                                <th>Email</th>
+                                <th>SDT</th>
+                                <th>Vai tro</th>
+                                <th class="text-center">Trang thai</th>
+                                <th class="text-center">Thao tac</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${userPage.content}">
+                                <td th:text="${user.id}">1</td>
+                                <td>
+                                    <div style="font-weight:500;" th:text="${user.fullname ?: '(Chua co ten)'}">Name</div>
+                                </td>
+                                <td><code style="color:var(--accent);font-size:0.8rem;" th:text="${user.username ?: ''}">username</code></td>
+                                <td style="font-size:0.8rem;" th:text="${user.email ?: 'N/A'}">email</td>
+                                <td style="font-size:0.8rem;" th:text="${user.phoneNumber ?: 'N/A'}">phone</td>
+                                <td>
+                                    <th:block th:if="${user.roles != null and !user.roles.isEmpty()}">
+                                        <span th:each="role : ${user.roles}"
+                                              class="badge me-1"
+                                              th:classappend="${role.name == 'ROLE_ADMIN' ? 'bg-danger' : 'bg-info'}"
+                                              th:text="${role.name == 'ROLE_ADMIN' ? 'Admin' : 'User'}">Role</span>
+                                    </th:block>
+                                    <span th:if="${user.roles == null or user.roles.isEmpty()}" class="badge bg-secondary">N/A</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge"
+                                          th:classappend="${user.isActive != null and user.isActive ? 'bg-success' : 'bg-secondary'}"
+                                          th:text="${user.isActive != null and user.isActive ? 'Hoat dong' : 'Vo hieu hoa'}">Active</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a th:href="@{/admin/users/edit/{id}(id=${user.id})}"
+                                           class="btn btn-outline-primary btn-sm" style="font-size:0.72rem;" title="Sua">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post" style="display:inline;">
+                                            <button type="submit"
+                                                    class="btn btn-sm"
+                                                    th:classappend="${user.isActive != null and user.isActive ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                                    style="font-size:0.72rem;"
+                                                    th:title="${user.isActive != null and user.isActive ? 'Vo hieu hoa' : 'Kich hoat'}">
+                                                <i th:classappend="${user.isActive != null and user.isActive ? 'fa-ban' : 'fa-check'}" class="fas"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${userPage.content.isEmpty()}">
+                                <td colspan="8" class="text-center py-4" style="color:var(--text-muted);">
+                                    <i class="fas fa-users fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                    Khong co nguoi dung nao
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${userPage.totalPages > 1}" class="d-flex justify-content-center mt-3">
+            <ul class="pagination pagination-sm">
+                <li class="page-item" th:classappend="${userPage.number == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/users(page=${userPage.number - 1})}"><i class="fas fa-chevron-left"></i></a>
+                </li>
+                <li th:each="i : ${#numbers.sequence(0, userPage.totalPages - 1)}"
+                    class="page-item" th:classappend="${i == userPage.number ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/admin/users(page=${i})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${userPage.number == userPage.totalPages - 1 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/users(page=${userPage.number + 1})}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>

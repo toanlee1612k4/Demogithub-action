@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head(${book.id != null ? 'Sua sach - Admin' : 'Them sach - Admin'})}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('books')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar(${book.id != null ? 'Sua sach' : 'Them sach moi'})}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/admin/books}">Sach</a></li>
+                <li class="breadcrumb-item active" th:text="${book.id != null ? 'Sua sach' : 'Them sach'}">Them sach</li>
+            </ol>
+        </nav>
+
+        <!-- Book Form -->
+        <form th:action="${book.id != null} ? @{/admin/books/edit/{id}(id=${book.id})} : @{/admin/books/create}"
+              th:object="${book}" method="post" class="needs-validation" novalidate>
+
+            <div class="row g-3">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <div class="glass-card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-info-circle me-2" style="color:var(--accent);"></i>Thong tin co ban</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="title" class="form-label">Tieu de <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="title" th:field="*{title}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="author" class="form-label">Tac gia <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="author" th:field="*{author}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="image" class="form-label">URL hinh anh</label>
+                                    <input type="url" class="form-control" id="image" th:field="*{image}" placeholder="https://example.com/image.jpg">
+                                </div>
+                                <div class="col-12">
+                                    <label for="description" class="form-label">Mo ta <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="description" th:field="*{description}" rows="4" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Category -->
+                    <div class="glass-card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-tags me-2" style="color:#22c55e;"></i>Danh muc</h6>
+                        </div>
+                        <div class="card-body">
+                            <select class="form-select" id="category" name="categoryId" required>
+                                <option value="">-- Chon danh muc --</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.id}" th:text="${cat.name}"
+                                        th:selected="${book.category != null && book.category.id == cat.id}">Category</option>
+                            </select>
+                            <input type="hidden" name="isDeleted" th:value="${book.isDeleted != null ? book.isDeleted : false}" />
+                        </div>
+                    </div>
+
+                    <!-- Price & Stock -->
+                    <div class="glass-card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-dollar-sign me-2" style="color:#eab308;"></i>Gia &amp; Kho</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Gia <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="price" th:field="*{price}" min="0" step="1000" required>
+                                    <span class="input-group-text" style="background:rgba(30,41,59,0.8);border-color:var(--glass-border);color:var(--text-muted);">d</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="quantity" class="form-label">So luong <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" th:field="*{quantity}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="glass-card mb-3" th:if="${book.image != null and !book.image.isEmpty()}">
+                        <div class="card-body text-center">
+                            <img th:src="${book.image}" class="img-fluid rounded" style="max-height:180px;border:1px solid var(--glass-border);">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            <span th:text="${book.id != null ? 'Cap nhat' : 'Them moi'}">Them moi</span>
+                        </button>
+                        <a th:href="@{/admin/books}" class="btn btn-outline-secondary" style="color:var(--text-secondary);border-color:var(--glass-border);">
+                            <i class="fas fa-times me-1"></i> Huy
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+<script>
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+</body>
+</html>

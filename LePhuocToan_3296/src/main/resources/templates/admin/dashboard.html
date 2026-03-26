@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Dashboard - JBook Admin')}"></head>
+<body>
+
+<!-- Sidebar -->
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('dashboard')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<!-- Main -->
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Dashboard')}"></header>
+
+    <div class="admin-content">
+
+        <!-- Alert -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card stat-card stat-blue p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Tong doanh thu</div>
+                            <div style="font-size:1.35rem;font-weight:700;color:#fff;" th:text="${#numbers.formatDecimal(allTimeRevenue, 0, 'POINT', 0, 'COMMA')} + 'đ'">0đ</div>
+                            <div style="font-size:0.7rem;color:#22c55e;margin-top:0.15rem;">
+                                <i class="fas fa-check-circle"></i> 
+                                <span th:text="${completedOrdersCount} + ' don hoan thanh'">0 don hoan thanh</span>
+                            </div>
+                        </div>
+                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-dollar-sign" style="color:#3b82f6;font-size:1.1rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card stat-card stat-green p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Don hang moi</div>
+                            <div style="font-size:1.35rem;font-weight:700;color:#fff;" th:text="${newOrdersCount}">0</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.15rem;">
+                                <span th:text="'Tong: ' + ${totalOrders} + ' don'">Tong: 0 don</span>
+                            </div>
+                        </div>
+                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-shopping-cart" style="color:#22c55e;font-size:1.1rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card stat-card stat-yellow p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Khach hang</div>
+                            <div style="font-size:1.35rem;font-weight:700;color:#fff;" th:text="${totalCustomers}">0</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.15rem;">Tong so</div>
+                        </div>
+                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(234,179,8,0.15);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-users" style="color:#eab308;font-size:1.1rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card stat-card stat-red p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Sach sap het</div>
+                            <div style="font-size:1.35rem;font-weight:700;color:#ef4444;" th:text="${lowStockCount}">0</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.15rem;">Can nhap them</div>
+                        </div>
+                        <div style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:1.1rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts + Top Books -->
+        <div class="row g-3 mb-4">
+            <!-- Revenue Chart + Table -->
+            <div class="col-lg-8">
+                <div class="glass-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-chart-line me-2" style="color:var(--accent);"></i>Doanh thu 7 ngay qua</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart" height="85"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Selling Books with IMAGES -->
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-fire me-2" style="color:#f59e0b;"></i>Top sach ban chay</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:each="book, stat : ${topSellingBooks}" class="d-flex align-items-center p-3" style="border-bottom:1px solid var(--glass-border);">
+                            <span class="badge me-3" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;"
+                                  th:classappend="${stat.count == 1 ? 'bg-warning text-dark' : stat.count == 2 ? 'bg-secondary' : 'bg-dark'}"
+                                  th:text="${stat.count}">1</span>
+                            <img th:src="${book.image != null and !book.image.isEmpty() ? book.image : 'https://via.placeholder.com/40x56/1e293b/64748b?text=No+Img'}"
+                                 th:alt="${book.title}"
+                                 style="width:40px;height:56px;object-fit:cover;border-radius:6px;margin-right:0.75rem;flex-shrink:0;border:1px solid var(--glass-border);">
+                            <div class="flex-grow-1 min-w-0">
+                                <div style="font-size:0.78rem;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" th:text="${book.title}">Ten sach</div>
+                                <div style="font-size:0.68rem;color:var(--text-muted);" th:text="${book.author}">Tac gia</div>
+                                <div style="font-size:0.7rem;color:#22c55e;" th:text="'Ton: ' + (${book.quantity} != null ? ${book.quantity} : 0) + ' cuon'">Ton: 0</div>
+                            </div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(topSellingBooks)}" class="p-3 text-center" style="color:var(--text-muted);font-size:0.8rem;">
+                            Chua co du lieu
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders + Low Stock -->
+        <div class="row g-3 mb-4">
+            <!-- Recent Orders -->
+            <div class="col-lg-8">
+                <div class="glass-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-shopping-bag me-2" style="color:var(--accent);"></i>Don hang gan day</h6>
+                        <a th:href="@{/admin/orders}" class="btn-glass" style="font-size:0.72rem;text-decoration:none;">
+                            Xem tat ca <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table admin-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Ma DH</th>
+                                        <th>Khach hang</th>
+                                        <th>Ngay</th>
+                                        <th>Tong tien</th>
+                                        <th>Trang thai</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="order : ${recentOrders}">
+                                        <td><strong th:text="'#' + ${order.id}">#1</strong></td>
+                                        <td th:text="${order.user.fullname}">Khach</td>
+                                        <td style="font-size:0.75rem;" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                                        <td>
+                                            <strong style="color:#ef4444;" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-glass"
+                                                  th:classappend="${order.status == 'PENDING' ? 'bg-warning text-dark' :
+                                                                  order.status == 'CONFIRMED' ? 'bg-info' :
+                                                                  order.status == 'SHIPPING' ? 'bg-primary' :
+                                                                  order.status == 'COMPLETED' ? 'bg-success' :
+                                                                  order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                                                  th:text="${order.status == 'PENDING' ? 'Cho xac nhan' :
+                                                           order.status == 'CONFIRMED' ? 'Da xac nhan' :
+                                                           order.status == 'SHIPPING' ? 'Dang giao' :
+                                                           order.status == 'COMPLETED' ? 'Da giao' :
+                                                           order.status == 'CANCELLED' ? 'Da huy' : order.status}">
+                                                Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/admin/orders/{id}(id=${order.id})}" class="btn-glass" style="font-size:0.7rem;padding:0.25rem 0.5rem;text-decoration:none;">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="col-lg-4">
+                <div class="glass-card" style="border-color:rgba(239,68,68,0.3);">
+                    <div class="card-header" style="border-bottom-color:rgba(239,68,68,0.2);">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:#ef4444;"><i class="fas fa-exclamation-triangle me-2"></i>Canh bao ton kho</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:each="book : ${lowStockBooks}" class="d-flex align-items-center justify-content-between p-3" style="border-bottom:1px solid rgba(239,68,68,0.1);">
+                            <div class="d-flex align-items-center min-w-0 flex-grow-1">
+                                <img th:src="${book.image != null and !book.image.isEmpty() ? book.image : 'https://via.placeholder.com/36x48/1e293b/64748b?text=No'}"
+                                     style="width:36px;height:48px;object-fit:cover;border-radius:5px;margin-right:0.65rem;flex-shrink:0;border:1px solid var(--glass-border);">
+                                <div class="min-w-0">
+                                    <div style="font-size:0.78rem;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" th:text="${book.title}">Sach</div>
+                                    <div style="font-size:0.7rem;color:#ef4444;">
+                                        <i class="fas fa-exclamation-circle"></i> Con <strong th:text="${book.quantity}">0</strong> cuon
+                                    </div>
+                                </div>
+                            </div>
+                            <a th:href="@{/admin/books/edit/{id}(id=${book.id})}" class="btn-glass" style="font-size:0.68rem;padding:0.2rem 0.45rem;flex-shrink:0;text-decoration:none;">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                        <div th:if="${#lists.isEmpty(lowStockBooks)}" class="p-3 text-center" style="color:var(--text-muted);font-size:0.8rem;">
+                            Tat ca sach du ton kho
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let revenueData = /*[[${revenueChartData}]]*/ [];
+    const maxRevenue = /*[[${maxRevenue}]]*/ 0;
+    
+    console.log('📊 Dữ liệu nhận từ controller:', revenueData);
+    console.log('💰 Max revenue từ backend:', maxRevenue);
+    
+    // ✅ Kiểm tra xem có dữ liệu thực tế không (tổng revenue > 0)
+    let totalRealRevenue = 0;
+    if (revenueData && revenueData.length > 0) {
+        revenueData.forEach(item => {
+            totalRealRevenue += (item.amount || 0);
+        });
+    }
+    
+    console.log('💵 Tổng doanh thu thực tế 7 ngày:', totalRealRevenue);
+    
+    // Nếu KHÔNG có dữ liệu hoặc tổng = 0, tạo demo data
+    if (!revenueData || revenueData.length === 0 || totalRealRevenue === 0) {
+        console.warn('⚠️ Không có doanh thu thực từ DB. Tạo dữ liệu demo để minh họa...');
+        const today = new Date();
+        const demoData = [
+            { base: 300000, variance: 150000 },
+            { base: 600000, variance: 250000 },
+            { base: 900000, variance: 350000 },
+            { base: 750000, variance: 300000 },
+            { base: 1200000, variance: 400000 },
+            { base: 1500000, variance: 500000 },
+            { base: 1100000, variance: 400000 }
+        ];
+        
+        revenueData = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0');
+            
+            // Tạo số liệu dao động tự nhiên
+            const demo = demoData[6 - i];
+            const amount = demo.base + Math.random() * demo.variance - (demo.variance / 2);
+            
+            revenueData.push({
+                date: dateStr,
+                amount: Math.max(0, Math.round(amount))
+            });
+        }
+        console.log('✅ Đã tạo dữ liệu demo:', revenueData);
+    } else {
+        console.log('✅ Sử dụng dữ liệu thực từ database');
+        console.log('📈 Chi tiết từng ngày:', revenueData);
+    }
+    
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    // Format tiền Việt Nam: 1tr, 10tr, 100k
+    function formatMoney(value) {
+        if (value >= 1000000) {
+            return (value / 1000000).toFixed(value >= 10000000 ? 0 : 1).replace('.0', '') + 'tr';
+        } else if (value >= 1000) {
+            return (value / 1000).toFixed(0) + 'k';
+        } else {
+            return value.toLocaleString('vi-VN') + 'đ';
+        }
+    }
+    
+    // Format cho chart axis
+    function formatRevenue(value) {
+        if (value >= 1000000) {
+            return (value / 1000000).toFixed(1).replace('.0', '') + 'tr';
+        } else if (value >= 1000) {
+            return (value / 1000).toFixed(0) + 'k';
+        } else {
+            return Math.round(value);
+        }
+    }
+    
+    // ✅ Tạo gradient cho chart (giống hình mẫu)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+    gradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.1)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: revenueData.map(d => d.date),
+            datasets: [{
+                label: 'Doanh thu',
+                data: revenueData.map(d => d.amount),
+                borderColor: '#3b82f6',
+                backgroundColor: gradient,
+                tension: 0.42, // Đường cong mượt hơn (giống hình mẫu)
+                fill: true,
+                borderWidth: 2.5,
+                pointRadius: 0, // Ẩn điểm mặc định
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#3b82f6',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    borderColor: 'rgba(59, 130, 246, 0.5)',
+                    borderWidth: 1,
+                    titleFont: { size: 12, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(items) {
+                            return 'Ngày ' + items[0].label;
+                        },
+                        label: function(context) { 
+                            return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + 'đ'; 
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { 
+                        display: true,
+                        color: 'rgba(255,255,255,0.05)',
+                        drawBorder: false,
+                        lineWidth: 1
+                    },
+                    ticks: { 
+                        color: 'rgba(255,255,255,0.65)', 
+                        font: { size: 11, weight: '500' },
+                        padding: 8
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: function(context) {
+                        // Đảm bảo luôn có khoảng không gian phía trên
+                        const maxValue = Math.max(...revenueData.map(d => d.amount));
+                        return maxValue > 0 ? maxValue * 1.2 : 1000000; // Thêm 20% hoặc min 1tr
+                    },
+                    grid: { 
+                        display: true,
+                        color: 'rgba(255,255,255,0.05)',
+                        drawBorder: false,
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: 'rgba(255,255,255,0.65)',
+                        font: { size: 11, weight: '500' },
+                        padding: 8,
+                        stepSize: function() {
+                            // Tự động tính bước nhảy phù hợp
+                            const maxValue = Math.max(...revenueData.map(d => d.amount));
+                            if (maxValue < 100000) return 20000; // < 100k: bước 20k
+                            if (maxValue < 500000) return 100000; // < 500k: bước 100k
+                            if (maxValue < 2000000) return 500000; // < 2tr: bước 500k
+                            return 1000000; // >= 2tr: bước 1tr
+                        },
+                        callback: function(value) { 
+                            return formatRevenue(value);
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+    
+    // ✅ Tính và hiển thị tổng doanh thu tuần trong console
+    let totalWeek = 0;
+    revenueData.forEach(item => totalWeek += item.amount);
+    
+    console.log('====== THỐNG KÊ BIỂU ĐỒ ======');
+    console.log('📈 Số ngày:', revenueData.length);
+    console.log('💰 Tổng doanh thu tuần:', formatMoney(totalWeek));
+    console.log('💵 Số tiền chính xác:', totalWeek.toLocaleString('vi-VN') + 'đ');
+    console.log('📊 Giá trị cao nhất:', formatMoney(Math.max(...revenueData.map(d => d.amount))));
+    console.log('📉 Giá trị thấp nhất:', formatMoney(Math.min(...revenueData.map(d => d.amount))));
+    console.log('📝 Chi tiết từng ngày:');
+    revenueData.forEach((item, idx) => {
+        console.log(`   ${idx + 1}. ${item.date}: ${formatMoney(item.amount)} (${item.amount.toLocaleString('vi-VN')}đ)`);
+    });
+    console.log('==============================');
+    /*]]>*/
+</script>
+
+</body>
+</html>

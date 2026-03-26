@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Kết quả tìm kiếm - JBook Store')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="main-content">
+    <div class="container py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Kết quả tìm kiếm</li>
+            </ol>
+        </nav>
+
+        <h3 class="mb-4">
+            <i class="fas fa-search"></i> Kết quả tìm kiếm cho: 
+            <span class="text-primary" th:text="${keyword}"></span>
+        </h3>
+
+        <div th:if="${bookPage != null && bookPage.totalElements > 0}" class="mb-3 text-muted">
+            Tìm thấy <strong th:text="${bookPage.totalElements}">0</strong> kết quả
+        </div>
+
+        <!-- Books Grid -->
+        <div class="row g-4" th:if="${bookPage != null && bookPage.totalElements > 0}">
+            <div class="col-6 col-md-4 col-lg-3" th:each="book : ${bookPage.content}">
+                <div class="card book-card h-100">
+                    <div class="position-relative">
+                        <img th:src="${book.image != null ? book.image : 'https://via.placeholder.com/300x400/6c757d/ffffff?text=No+Image'}" 
+                             class="card-img-top" th:alt="${book.title}" style="height:300px;object-fit:cover;">
+                        <span th:if="${book.quantity != null && book.quantity <= 0}" 
+                              class="position-absolute top-0 end-0 m-2 badge bg-danger">Hết hàng</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-truncate" th:text="${book.title}" th:title="${book.title}">Tên sách</h6>
+                        <p class="card-text text-muted small text-truncate" th:text="${book.author}">Tác giả</p>
+                        <div class="mb-2">
+                            <span class="price" th:text="${#numbers.formatDecimal(book.price, 0, 'COMMA', 0, 'POINT') + '₫'}">0₫</span>
+                        </div>
+                        <div class="mt-auto d-grid gap-2">
+                            <a th:href="@{/books/{id}(id=${book.id})}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-info-circle"></i> Chi tiết
+                            </a>
+                            <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()">
+                                <input type="hidden" name="bookId" th:value="${book.id}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary btn-sm w-100"
+                                        th:disabled="${book.quantity != null && book.quantity <= 0}">
+                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${bookPage == null || bookPage.totalElements == 0}" class="text-center py-5">
+            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+            <h4>Không tìm thấy kết quả</h4>
+            <p class="text-muted">Thử tìm kiếm với từ khóa khác</p>
+            <a th:href="@{/books}" class="btn btn-primary">Xem tất cả sách</a>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${bookPage != null && bookPage.totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${bookPage.number == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/search(keyword=${keyword}, page=${bookPage.number - 1})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, bookPage.totalPages - 1)}"
+                    th:classappend="${i == bookPage.number} ? 'active'">
+                    <a class="page-link" th:href="@{/search(keyword=${keyword}, page=${i})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${bookPage.number + 1 >= bookPage.totalPages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/search(keyword=${keyword}, page=${bookPage.number + 1})}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

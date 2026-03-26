@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${book.title + ' - JBook Store'})}"></head>
+<body>
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div class="container">
+        
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/books}">Sách</a></li>
+                <li class="breadcrumb-item" th:if="${book.category}">
+                    <a th:href="@{/books(category=${book.category.id})}" th:text="${book.category.name}">Danh mục</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${book.title}">Chi tiết sách</li>
+            </ol>
+        </nav>
+        
+        <!-- Alert Messages -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Book Detail -->
+        <div class="row mb-5">
+            <!-- Book Image Column -->
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm">
+                    <img th:src="${book.image != null ? book.image : 'https://via.placeholder.com/500x700/6c757d/ffffff?text=No+Image'}" 
+                         class="card-img-top" 
+                         th:alt="${book.title}"
+                         style="height: 600px; object-fit: cover;">
+                    
+                    <!-- Additional Images Carousel (if exists) -->
+                    <div th:if="${book.bookImages != null && !#lists.isEmpty(book.bookImages)}" class="card-body">
+                        <div class="row g-2">
+                            <div class="col-3" th:each="image : ${book.bookImages}">
+                                <img th:src="${image.imageName}" 
+                                     class="img-thumbnail cursor-pointer additional-image" 
+                                     th:alt="'Ảnh ' + ${imageStat.count}"
+                                     style="height: 80px; object-fit: cover; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Book Information Column -->
+            <div class="col-md-7">
+                <h2 class="mb-3" th:text="${book.title}">Tên sách</h2>
+                
+                <!-- Rating -->
+                <div class="mb-3">
+                    <span class="text-warning">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </span>
+                    <span class="text-muted ms-2">(4.5/5 - 127 đánh giá)</span>
+                </div>
+                
+                <!-- Price -->
+                <div class="mb-4">
+                    <h3 class="price d-inline-block" th:text="${#numbers.formatDecimal(book.price, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                        150,000₫
+                    </h3>
+                </div>
+                
+                <!-- Book Details -->
+                <table class="table table-borderless mb-4">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted" style="width: 150px;"><i class="fas fa-user"></i> Tác giả:</td>
+                            <td><strong th:text="${book.author}">Tác giả</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><i class="fas fa-layer-group"></i> Danh mục:</td>
+                            <td>
+                                <a th:if="${book.category}" 
+                                   th:href="@{/books(category=${book.category.id})}" 
+                                   th:text="${book.category.name}"
+                                   class="badge bg-primary text-decoration-none">
+                                    Danh mục
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><i class="fas fa-calendar"></i> Năm xuất bản:</td>
+                            <td th:text="${book.publishYear}">2024</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><i class="fas fa-book"></i> Số trang:</td>
+                            <td th:text="${book.pages}">300</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><i class="fas fa-cube"></i> Tình trạng:</td>
+                            <td>
+                                <span th:if="${book.quantity > 10}" class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Còn hàng
+                                </span>
+                                <span th:if="${book.quantity > 0 && book.quantity <= 10}" class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Sắp hết (Còn <span th:text="${book.quantity}">5</span>)
+                                </span>
+                                <span th:if="${book.quantity <= 0}" class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> Hết hàng
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Add to Cart Form -->
+                <form th:action="@{/cart/add}" method="post" id="addToCartForm" class="mb-4">
+                    <input type="hidden" name="bookId" th:value="${book.id}">
+                    
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="quantity" class="form-label">Số lượng:</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" id="decreaseQty">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" 
+                                       class="form-control text-center" 
+                                       id="quantity" 
+                                       name="quantity" 
+                                       value="1" 
+                                       min="1" 
+                                       th:max="${book.quantity}"
+                                       th:disabled="${book.quantity <= 0}">
+                                <button class="btn btn-outline-secondary" type="button" id="increaseQty">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Tối đa: <span th:text="${book.quantity}">10</span> cuốn</small>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="d-grid gap-2">
+                                <button type="submit" 
+                                        class="btn btn-primary btn-lg" 
+                                        th:disabled="${book.quantity <= 0}">
+                                    <i class="fas fa-cart-plus"></i> 
+                                    <span th:text="${book.quantity > 0 ? 'Thêm vào giỏ hàng' : 'Hết hàng'}">Thêm vào giỏ hàng</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger">
+                                    <i class="fas fa-heart"></i> Yêu thích
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Stock Warning -->
+                <div th:if="${book.quantity > 0 && book.quantity <= 10}" class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Chú ý:</strong> Sản phẩm sắp hết hàng. Chỉ còn <span th:text="${book.quantity}">5</span> cuốn.
+                </div>
+                
+                <!-- Policy Icons -->
+                <div class="row g-3 mt-3">
+                    <div class="col-6 col-md-3 text-center">
+                        <i class="fas fa-shield-alt fa-2x text-primary mb-2"></i>
+                        <p class="small mb-0">Hàng chính hãng</p>
+                    </div>
+                    <div class="col-6 col-md-3 text-center">
+                        <i class="fas fa-truck fa-2x text-success mb-2"></i>
+                        <p class="small mb-0">Ship nhanh</p>
+                    </div>
+                    <div class="col-6 col-md-3 text-center">
+                        <i class="fas fa-undo fa-2x text-warning mb-2"></i>
+                        <p class="small mb-0">Đổi trả 7 ngày</p>
+                    </div>
+                    <div class="col-6 col-md-3 text-center">
+                        <i class="fas fa-headset fa-2x text-info mb-2"></i>
+                        <p class="small mb-0">Hỗ trợ 24/7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Book Description -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-info-circle"></i> Mô tả sản phẩm</h4>
+                    </div>
+                    <div class="card-body">
+                        <div th:utext="${book.description}">
+                            <p>Đây là mô tả chi tiết về cuốn sách. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Books -->
+        <div class="mb-5">
+            <h3 class="mb-4"><i class="fas fa-book"></i> Sách liên quan</h3>
+            
+            <div class="row g-4">
+                <div class="col-6 col-md-3" th:each="relatedBook : ${relatedBooks}">
+                    <div class="card book-card h-100">
+                        <img th:src="${relatedBook.image != null ? relatedBook.image : 'https://via.placeholder.com/300x400'}" 
+                             class="card-img-top" 
+                             th:alt="${relatedBook.title}">
+                        
+                        <div class="card-body">
+                            <h6 class="card-title text-truncate" th:text="${relatedBook.title}">Tên sách</h6>
+                            <p class="card-text text-muted small text-truncate" th:text="${relatedBook.author}">Tác giả</p>
+                            
+                            <div class="price mb-2" th:text="${#numbers.formatDecimal(relatedBook.price, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                                120,000₫
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a th:href="@{/books/{id}(id=${relatedBook.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div th:if="${relatedBooks == null || #lists.isEmpty(relatedBooks)}" class="text-center py-4">
+                <p class="text-muted">Không có sách liên quan</p>
+            </div>
+        </div>
+        
+    </div>
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Scripts -->
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<!-- Page Specific Scripts -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const maxQuantity = /*[[${book.quantity}]]*/ 10;
+    
+    // Quantity controls
+    document.getElementById('decreaseQty').addEventListener('click', function() {
+        const input = document.getElementById('quantity');
+        let value = parseInt(input.value);
+        if (value > 1) {
+            input.value = value - 1;
+        }
+    });
+    
+    document.getElementById('increaseQty').addEventListener('click', function() {
+        const input = document.getElementById('quantity');
+        let value = parseInt(input.value);
+        if (value < maxQuantity) {
+            input.value = value + 1;
+        } else {
+            showToast('Số lượng không được vượt quá tồn kho!', 'warning');
+        }
+    });
+    
+    // Validate quantity input
+    document.getElementById('quantity').addEventListener('input', function() {
+        let value = parseInt(this.value);
+        
+        if (isNaN(value) || value < 1) {
+            this.value = 1;
+        } else if (value > maxQuantity) {
+            this.value = maxQuantity;
+            showToast(`Chỉ còn ${maxQuantity} cuốn trong kho!`, 'warning');
+        }
+    });
+    
+    // Change main image when clicking additional images
+    document.querySelectorAll('.additional-image').forEach(img => {
+        img.addEventListener('click', function() {
+            const mainImage = document.querySelector('.card-img-top');
+            const tempSrc = mainImage.src;
+            mainImage.src = this.src;
+            this.src = tempSrc;
+        });
+    });
+    
+    // Form submission validation
+    document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        const quantity = parseInt(document.getElementById('quantity').value);
+        
+        if (quantity > maxQuantity) {
+            e.preventDefault();
+            showToast('Số lượng vượt quá tồn kho!', 'danger');
+            return false;
+        }
+        
+        if (quantity < 1) {
+            e.preventDefault();
+            showToast('Số lượng phải lớn hơn 0!', 'danger');
+            return false;
+        }
+        
+        return true;
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

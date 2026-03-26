@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Audit Log - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('audit-logs')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Audit Log')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Audit Log</li>
+            </ol>
+        </nav>
+
+        <!-- Filter -->
+        <div class="glass-card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                    <i class="fas fa-filter me-2" style="color:var(--accent);"></i>Bo loc
+                </h6>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/audit-logs}" method="get">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label" style="color:var(--text-secondary);font-size:0.75rem;">Hanh dong</label>
+                            <select class="form-select form-select-sm" name="action">
+                                <option value="">Tat ca</option>
+                                <option value="CREATE" th:selected="${action == 'CREATE'}">CREATE</option>
+                                <option value="UPDATE" th:selected="${action == 'UPDATE'}">UPDATE</option>
+                                <option value="DELETE" th:selected="${action == 'DELETE'}">DELETE</option>
+                                <option value="LOGIN" th:selected="${action == 'LOGIN'}">LOGIN</option>
+                                <option value="LOGOUT" th:selected="${action == 'LOGOUT'}">LOGOUT</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" style="color:var(--text-secondary);font-size:0.75rem;">Tu khoa</label>
+                            <input type="text" class="form-control form-control-sm" name="keyword"
+                                   th:value="${keyword}" placeholder="Tim kiem...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" style="color:var(--text-secondary);font-size:0.75rem;">Tu ngay</label>
+                            <input type="date" class="form-control form-control-sm" name="fromDate"
+                                   th:value="${fromDate}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary btn-sm" style="font-size:0.8rem;">
+                                <i class="fas fa-search me-1"></i> Loc
+                            </button>
+                            <a th:href="@{/admin/audit-logs}" class="btn btn-outline-secondary btn-sm" style="color:var(--text-secondary);border-color:var(--glass-border);font-size:0.8rem;">
+                                <i class="fas fa-redo me-1"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Log Table -->
+        <div class="glass-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                    <i class="fas fa-history me-2" style="color:var(--accent);"></i>Lich su hoat dong
+                    <span class="badge badge-glass bg-primary ms-2" th:text="${totalElements}">0</span>
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Thoi gian</th>
+                                <th>Hanh dong</th>
+                                <th>Doi tuong</th>
+                                <th>ID DT</th>
+                                <th>Nguoi thuc hien</th>
+                                <th>Gia tri cu</th>
+                                <th>Gia tri moi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${logs}">
+                                <td th:text="${log.id}">1</td>
+                                <td style="font-size:0.75rem;white-space:nowrap;">
+                                    <span th:text="${log.modifiedAt != null ? #temporals.format(log.modifiedAt, 'dd/MM/yyyy HH:mm:ss') : 'N/A'}">time</span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${log.action == 'CREATE' ? 'bg-success' :
+                                                          log.action == 'UPDATE' ? 'bg-info' :
+                                                          log.action == 'DELETE' ? 'bg-danger' :
+                                                          log.action == 'LOGIN' ? 'bg-primary' : 'bg-secondary'}"
+                                          th:text="${log.action}">ACTION</span>
+                                </td>
+                                <td style="font-size:0.8rem;" th:text="${log.entityName}">Entity</td>
+                                <td th:text="${log.entityId}">1</td>
+                                <td>
+                                    <i class="fas fa-user-circle me-1" style="color:var(--text-muted);"></i>
+                                    <span style="font-size:0.82rem;" th:text="${log.modifiedBy ?: 'System'}">admin</span>
+                                </td>
+                                <td style="max-width:150px;">
+                                    <div style="font-size:0.72rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                         th:text="${log.oldValue}" th:title="${log.oldValue}">old</div>
+                                </td>
+                                <td style="max-width:150px;">
+                                    <div style="font-size:0.72rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                         th:text="${log.newValue}" th:title="${log.newValue}">new</div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(logs)}">
+                                <td colspan="8" class="text-center py-4" style="color:var(--text-muted);">
+                                    <i class="fas fa-clipboard-list fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                    Khong co log nao
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${totalPages > 1}" class="d-flex justify-content-center mt-3">
+            <ul class="pagination pagination-sm">
+                <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/audit-logs(page=${currentPage - 1}, action=${action}, keyword=${keyword}, fromDate=${fromDate})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    class="page-item" th:classappend="${i == currentPage ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/admin/audit-logs(page=${i}, action=${action}, keyword=${keyword}, fromDate=${fromDate})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/audit-logs(page=${currentPage + 1}, action=${action}, keyword=${keyword}, fromDate=${fromDate})}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>

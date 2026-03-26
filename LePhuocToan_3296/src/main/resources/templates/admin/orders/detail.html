@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Chi tiet don hang - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('orders')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Chi tiet don hang')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/admin/orders}">Don hang</a></li>
+                <li class="breadcrumb-item active">Chi tiet</li>
+            </ol>
+        </nav>
+
+        <!-- Order Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h5 style="font-weight:600;color:var(--text-primary);margin:0;">
+                    <i class="fas fa-receipt me-2"></i>Don hang #<span th:text="${order.id}">1</span>
+                </h5>
+                <small style="color:var(--text-muted);">
+                    <i class="far fa-calendar me-1"></i>
+                    <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                </small>
+            </div>
+            <span class="badge" style="font-size:0.85rem;padding:0.45em 1em;"
+                  th:classappend="${order.status == 'PENDING' ? 'bg-warning text-dark' :
+                                  order.status == 'CONFIRMED' ? 'bg-info' :
+                                  order.status == 'SHIPPING' ? 'bg-primary' :
+                                  order.status == 'COMPLETED' ? 'bg-success' :
+                                  order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                  th:text="${order.status == 'PENDING' ? 'Cho xac nhan' :
+                           order.status == 'CONFIRMED' ? 'Da xac nhan' :
+                           order.status == 'SHIPPING' ? 'Dang giao' :
+                           order.status == 'COMPLETED' ? 'Da giao' :
+                           order.status == 'CANCELLED' ? 'Da huy' : order.status}">Status</span>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row g-3">
+            <!-- Order Items -->
+            <div class="col-lg-8">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-shopping-bag me-2" style="color:var(--accent);"></i>San pham</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table admin-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>San pham</th>
+                                        <th class="text-center">SL</th>
+                                        <th class="text-end">Don gia</th>
+                                        <th class="text-end">Thanh tien</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="detail : ${order.orderDetails}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img th:src="${detail.book.image != null and !detail.book.image.isEmpty() ? detail.book.image : 'https://via.placeholder.com/40x56/1e293b/64748b?text=No'}"
+                                                     class="rounded me-3"
+                                                     style="width:40px;height:56px;object-fit:cover;border:1px solid var(--glass-border);">
+                                                <div>
+                                                    <div style="font-weight:500;" th:text="${detail.book.title}">Sach</div>
+                                                    <small style="color:var(--text-muted);" th:text="${detail.book.author}">Tac gia</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge bg-primary badge-glass" th:text="${detail.quantity}">1</span>
+                                        </td>
+                                        <td class="text-end align-middle" th:text="${#numbers.formatDecimal(detail.price, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</td>
+                                        <td class="text-end align-middle">
+                                            <strong th:text="${#numbers.formatDecimal(detail.price * detail.quantity, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end" style="font-weight:600;">Tong cong:</td>
+                                        <td class="text-end">
+                                            <strong style="color:#ef4444;font-size:1.05rem;" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <!-- Customer Info -->
+                <div class="glass-card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-user me-2" style="color:#22c55e;"></i>Khach hang</h6>
+                    </div>
+                    <div class="card-body" style="font-size:0.82rem;">
+                        <p class="mb-2"><i class="fas fa-user-circle me-2" style="color:var(--text-muted);"></i><span th:text="${order.user.fullname}">Name</span></p>
+                        <p class="mb-2"><i class="fas fa-phone me-2" style="color:var(--text-muted);"></i><span th:text="${order.phoneNumber}">Phone</span></p>
+                        <p class="mb-2"><i class="fas fa-envelope me-2" style="color:var(--text-muted);"></i><span th:text="${order.user.email}">Email</span></p>
+                        <p class="mb-0"><i class="fas fa-map-marker-alt me-2" style="color:var(--text-muted);"></i><span th:text="${order.shippingAddress}">Address</span></p>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="glass-card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-money-bill-wave me-2" style="color:#eab308;"></i>Thanh toan</h6>
+                    </div>
+                    <div class="card-body" style="font-size:0.82rem;">
+                        <p class="mb-2"><strong>Phuong thuc:</strong>
+                            <span th:text="${order.paymentMethod == 'COD' ? 'Thanh toan khi nhan hang' :
+                                           order.paymentMethod == 'BANKING' ? 'Chuyen khoan ngan hang' : order.paymentMethod}">COD</span>
+                        </p>
+                        <p class="mb-0" th:if="${order.note != null and !order.note.isEmpty()}">
+                            <strong>Ghi chu:</strong> <span th:text="${order.note}">Note</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Status Update -->
+                <div class="glass-card mb-3" th:if="${order.status != 'CANCELLED'}">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"><i class="fas fa-edit me-2" style="color:var(--accent);"></i>Cap nhat trang thai</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/orders/{id}/update-status(id=${order.id})}" method="post">
+                            <div class="mb-3">
+                                <select class="form-select" name="status" required>
+                                    <option value="">-- Chon trang thai --</option>
+                                    <option value="PENDING" th:selected="${order.status == 'PENDING'}">Cho xac nhan</option>
+                                    <option value="CONFIRMED" th:selected="${order.status == 'CONFIRMED'}">Da xac nhan</option>
+                                    <option value="SHIPPING" th:selected="${order.status == 'SHIPPING'}">Dang giao hang</option>
+                                    <option value="COMPLETED" th:selected="${order.status == 'COMPLETED'}">Da giao hang</option>
+                                    <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">Da huy</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" style="font-size:0.82rem;">
+                                <i class="fas fa-save me-1"></i> Cap nhat
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Back -->
+                <div class="d-grid">
+                    <a th:href="@{/admin/orders}" class="btn btn-outline-secondary" style="color:var(--text-secondary);border-color:var(--glass-border);font-size:0.82rem;">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lai
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>

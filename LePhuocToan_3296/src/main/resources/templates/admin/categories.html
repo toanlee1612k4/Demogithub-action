@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Quan ly danh muc - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('categories')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Quan ly danh muc')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Danh muc</li>
+            </ol>
+        </nav>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row g-3">
+            <!-- Add Category -->
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                            <i class="fas fa-plus-circle me-2" style="color:#22c55e;"></i>Them danh muc
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/categories/add}" method="post" th:object="${newCategory}">
+                            <div class="mb-3">
+                                <label class="form-label" style="color:var(--text-secondary);font-size:0.8rem;font-weight:500;">Ten danh muc</label>
+                                <input type="text" class="form-control" th:field="*{name}" required placeholder="Nhap ten danh muc...">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" style="font-size:0.82rem;">
+                                <i class="fas fa-plus me-1"></i> Them
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category List -->
+            <div class="col-lg-8">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                            <i class="fas fa-tags me-2" style="color:var(--accent);"></i>Danh sach danh muc
+                            <span class="badge badge-glass bg-primary ms-2" th:text="${#lists.size(categories)}">0</span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table admin-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Ten danh muc</th>
+                                        <th class="text-center">So sach</th>
+                                        <th class="text-center">Thao tac</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cat : ${categories}">
+                                        <td th:text="${cat.id}">1</td>
+                                        <td>
+                                            <i class="fas fa-folder me-2" style="color:var(--accent);"></i>
+                                            <span style="font-weight:500;" th:text="${cat.name}">Category</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-glass bg-info" th:text="${cat.books != null ? #lists.size(cat.books) : 0}">0</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <form th:action="@{/admin/categories/delete/{id}(id=${cat.id})}" method="post"
+                                                  style="display:inline;"
+                                                  onsubmit="return confirm('Ban co chac chan muon xoa danh muc nay?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" style="font-size:0.72rem;" title="Xoa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(categories)}">
+                                        <td colspan="4" class="text-center py-4" style="color:var(--text-muted);">
+                                            <i class="fas fa-folder-open fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+                                            Chua co danh muc nao
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/admin-layout :: admin-head('Quan ly Don hang - Admin')}"></head>
+<body>
+<nav th:replace="~{fragments/admin-layout :: admin-sidebar('orders')}"></nav>
+<div th:replace="~{fragments/admin-layout :: admin-overlay}"></div>
+
+<div class="admin-main">
+    <header th:replace="~{fragments/admin-layout :: admin-topbar('Quan ly Don hang')}"></header>
+    <div class="admin-content">
+
+        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Don hang</li>
+            </ol>
+        </nav>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status == null ? 'active' : ''}"
+               th:style="${param.status == null ? 'background:var(--accent-light);color:#fff;border-color:var(--accent);' : ''}"
+               th:href="@{/admin/orders}">
+                <i class="fas fa-list me-1"></i> Tat ca
+            </a>
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status != null and param.status[0] == 'PENDING' ? 'active' : ''}"
+               th:style="${param.status != null and param.status[0] == 'PENDING' ? 'background:rgba(234,179,8,0.15);color:#eab308;border-color:rgba(234,179,8,0.3);' : ''}"
+               th:href="@{/admin/orders(status=PENDING)}">
+                <i class="fas fa-clock me-1"></i> Cho xac nhan
+            </a>
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status != null and param.status[0] == 'CONFIRMED' ? 'active' : ''}"
+               th:style="${param.status != null and param.status[0] == 'CONFIRMED' ? 'background:rgba(6,182,212,0.15);color:#06b6d4;border-color:rgba(6,182,212,0.3);' : ''}"
+               th:href="@{/admin/orders(status=CONFIRMED)}">
+                <i class="fas fa-check me-1"></i> Da xac nhan
+            </a>
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status != null and param.status[0] == 'SHIPPING' ? 'active' : ''}"
+               th:style="${param.status != null and param.status[0] == 'SHIPPING' ? 'background:var(--accent-light);color:var(--accent);border-color:var(--accent);' : ''}"
+               th:href="@{/admin/orders(status=SHIPPING)}">
+                <i class="fas fa-shipping-fast me-1"></i> Dang giao
+            </a>
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status != null and param.status[0] == 'COMPLETED' ? 'active' : ''}"
+               th:style="${param.status != null and param.status[0] == 'COMPLETED' ? 'background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);' : ''}"
+               th:href="@{/admin/orders(status=COMPLETED)}">
+                <i class="fas fa-box-open me-1"></i> Da giao
+            </a>
+            <a class="btn-glass" style="text-decoration:none;font-size:0.78rem;padding:0.35rem 0.75rem;"
+               th:classappend="${param.status != null and param.status[0] == 'CANCELLED' ? 'active' : ''}"
+               th:style="${param.status != null and param.status[0] == 'CANCELLED' ? 'background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3);' : ''}"
+               th:href="@{/admin/orders(status=CANCELLED)}">
+                <i class="fas fa-times-circle me-1"></i> Da huy
+            </a>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="glass-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ma DH</th>
+                                <th>Khach hang</th>
+                                <th>Ngay dat</th>
+                                <th>Tong tien</th>
+                                <th>Trang thai</th>
+                                <th>Thanh toan</th>
+                                <th class="text-end">Thao tac</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orderPage.content}">
+                                <td><strong th:text="'#' + ${order.id}">#1</strong></td>
+                                <td>
+                                    <div th:text="${order.user.fullname}" style="font-weight:500;">Khach</div>
+                                    <small style="color:var(--text-muted);" th:text="${order.phoneNumber}">0901234567</small>
+                                </td>
+                                <td>
+                                    <div style="font-size:0.78rem;" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy')}">01/01</div>
+                                    <small style="color:var(--text-muted);" th:text="${#temporals.format(order.orderDate, 'HH:mm')}">10:30</small>
+                                </td>
+                                <td>
+                                    <strong style="color:#ef4444;" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + 'd'}">0d</strong>
+                                </td>
+                                <td>
+                                    <span class="badge badge-glass"
+                                          th:classappend="${order.status == 'PENDING' ? 'bg-warning text-dark' :
+                                                          order.status == 'CONFIRMED' ? 'bg-info' :
+                                                          order.status == 'SHIPPING' ? 'bg-primary' :
+                                                          order.status == 'COMPLETED' ? 'bg-success' :
+                                                          order.status == 'CANCELLED' ? 'bg-danger' : 'bg-secondary'}"
+                                          th:text="${order.status == 'PENDING' ? 'Cho xac nhan' :
+                                                   order.status == 'CONFIRMED' ? 'Da xac nhan' :
+                                                   order.status == 'SHIPPING' ? 'Dang giao' :
+                                                   order.status == 'COMPLETED' ? 'Da giao' :
+                                                   order.status == 'CANCELLED' ? 'Da huy' : order.status}">Status</span>
+                                </td>
+                                <td>
+                                    <small th:text="${order.paymentMethod == 'COD' ? 'COD' : 'Chuyen khoan'}">COD</small>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/admin/orders/{id}(id=${order.id})}" class="btn-glass" style="font-size:0.72rem;padding:0.3rem 0.6rem;text-decoration:none;">
+                                        <i class="fas fa-eye me-1"></i> Chi tiet
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${orderPage.totalPages > 1}" class="mt-3">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item" th:classappend="${orderPage.first ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/orders(page=${orderPage.number - 1}, status=${param.status})}"><i class="fas fa-chevron-left"></i></a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, orderPage.totalPages - 1)}" th:classappend="${i == orderPage.number ? 'active' : ''}">
+                    <a class="page-link" th:href="@{/admin/orders(page=${i}, status=${param.status})}" th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${orderPage.last ? 'disabled' : ''}">
+                    <a class="page-link" th:href="@{/admin/orders(page=${orderPage.number + 1}, status=${param.status})}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/admin-layout :: admin-scripts}"></th:block>
+</body>
+</html>
