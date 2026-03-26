@@ -21,8 +21,6 @@ jobs:
       - name: Bước 3 - Build và Push Image lên Docker Hub
         uses: docker/build-push-action@v5
         with:
-          context: . # Tìm Dockerfile ở thư mục gốc
-          push: true # Cho phép đẩy lên Docker Hub sau khi build xong
-          # Đặt tên thẻ (tag) cho image. 
-          # Lưu ý: "my-java-backend" là tên image, bạn có thể đổi tên này tùy ý.
+          context: ./LePhuocToan_3296  # Báo cho nó biết Dockerfile nằm trong thư mục này
+          push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/my-java-backend:latest
